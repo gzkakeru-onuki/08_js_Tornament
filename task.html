@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCA_Mental Care Assistant</title>
+    <link rel="stylesheet" href="css/task.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+    <div class="container" style="display: none;">
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <div class="task">
+            <h3>Todoタスク</h3>
+            <div class="character">
+                <img src="images/baymax.jpg" alt="Friendly Assistant Character" id="character-image">
+            </div>
+            <label for="task">
+                <h4>日付とタスクを入力してください</h4>
+                <input type="date" id="taskDate" value=""><br>
+                <input type="text" placeholder="お散歩やリラックス" name="task" id="inputTask"><br>
+                <div class="addTask">
+                    <button type="button" id="addTaskButton">タスク作成</button>
+                </div>
+
+            </label>
+            <div id="response"></div>
+            <div id="task-list" style="height: 100px; overflow: auto;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, update, remove, set, off } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0",
+            authDomain: "project-mca-53bf6.firebaseapp.com",
+            databaseURL: "https://project-mca-53bf6-default-rtdb.firebaseio.com",
+            projectId: "project-mca-53bf6",
+            storageBucket: "project-mca-53bf6.firebasestorage.app",
+            messagingSenderId: "746471305667",
+            appId: "1:746471305667:web:1043d1a07f1ec6116acd76"
+        };
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth();
+
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // 現在の日付のフォーマット
+                    const today = new Date();
+                    const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+
+                    // タスクを読み込む関数
+                    const loadTasks = (selectedDate) => {
+                        const taskRef = ref(db, `users/${user.uid}/Tasks/${selectedDate}`);
+
+                        // リスナーを解除してから再登録
+                        off(taskRef);
+                        $("#task-list").empty();
+
+                        onValue(taskRef, (snapshot) => {
+                            $("#task-list").empty(); // タスクリストをクリア
+                            snapshot.forEach((childSnap) => {
+                                const taskData = childSnap.val();
+                                const taskKey = childSnap.key;
+                                $("#task-list").append(`
+                                    <p id="${taskKey}" style="margin-bottom: 15px;
+                                        padding: 10px;
+                                        border: 1px solid #ddd;
+                                        border-radius: 8px;
+                                        background-color: #f9f9f9;">
+                                        タスク：${taskData.tasks}
+                                        <div class="buttons"> 
+                                        <button class="done-task" data-id="${taskKey}" data-date="${selectedDate}">完了</button>
+                                        <button class="remove-task" data-id="${taskKey}" data-date="${selectedDate}">削除</button>
+                                        <div>
+                                        </p>
+                                `);
+                                if (taskData.completed) {
+                                    $(`#${taskKey}`).css("text-decoration", "line-through");
+                                }
+                            });
+                        });
+                    };
+
+                    // 日付変更でタスクを読み込み
+                    $("#taskDate").on("change", function () {
+                        const selectedDate = $(this).val();
+                        if (selectedDate) {
+                            loadTasks(selectedDate);
+                        }
+                    });
+
+                    // タスクの追加
+                    $("#addTaskButton").on("click", function () {
+                        const taskValue = $("#inputTask").val();
+                        const selectedDate = $("#taskDate").val();
+
+                        if (taskValue && selectedDate) {
+                            const taskRef = ref(db, `users/${user.uid}/Tasks/${selectedDate}`);
+                            const newTaskRef = push(taskRef);
+                            set(newTaskRef, {
+                                tasks: taskValue,
+                                timestamp: formattedDate,
+                                completed: false
+                            }).then(() => {
+                                $("#inputTask").val("");
+                                $("#response").text("タスクをDBに記録しました！").fadeIn(1000).fadeOut(3000);
+                                loadTasks(selectedDate);
+                            }).catch((error) => {
+                                console.error("Error:", error);
+                            });
+                        }
+                    });
+
+                    // タスク完了処理
+                    $(document).on("click", ".done-task", function () {
+                        const taskId = $(this).data("id");
+                        const selectedDate = $(this).data("date");
+                        const taskDoneRef = ref(db, `users/${user.uid}/Tasks/${selectedDate}/${taskId}`);
+                        update(taskDoneRef, {
+                            completed: true
+                        }).then(() => {
+                            $(`#${taskId}`).css("text-decoration", "line-through");
+                        }).catch((error) => {
+                            console.error("Error:", error);
+                        });
+                    });
+
+                    // タスク削除処理
+                    $(document).on("click", ".remove-task", function () {
+                        const taskId = $(this).data("id");
+                        const selectedDate = $(this).data("date");
+                        const taskDeleteRef = ref(db, `users/${user.uid}/Tasks/${selectedDate}/${taskId}`);
+                        remove(taskDeleteRef).then(() => {
+                            $(`#${taskId}`).remove();
+                        }).catch((error) => {
+                            console.error("Error:", error);
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/foods.css">
+    <title>カロリースキャン</title>
+    <style>
+        #result {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+    <div class="container" style="display: none;">
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <h3>食物の画像をアップロードして解析</h3>
+        <div class="character fuwafuwa01">
+            <img src="images/baymax.jpg" alt="Friendly Assistant Character" id="character-image">
+        </div>
+
+        <label class="selectFileButton">ファイルを選択<input type="file" id="imageInput" accept="image/*"
+                style="display: none;"></label><br>
+        <button id="analyzeButton">画像解析</button>
+        <ul id="result"></ul>
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+        })
+        const API_KEY = 'AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0'; // Google Cloud Vision APIキーを入力
+
+        // 食べ物とそのカロリーのデータ
+        const foodCalories = {
+            "apple": 52,       // 100gあたりのカロリー
+            "banana": 89,
+            "pizza": 266,
+            "sushi": 200,
+            "burger": 295,
+            "tomato": 18,
+            "rice": 130,
+            "chicken breast": 165,
+            "beef": 250,
+            "salmon": 208,
+            "egg": 155,
+            "milk": 42,
+            "cheese": 402,
+            "bread": 265,
+            "pasta": 131,
+            "potato": 77,
+            "carrot": 41,
+            "broccoli": 34,
+            "onion": 40,
+            "cucumber": 16,
+            "grapes": 69,
+            "orange": 47,
+            "pineapple": 50,
+            "strawberry": 32,
+            "watermelon": 30,
+            "avocado": 160,
+            "almonds": 579,
+            "chocolate": 546,
+            "yogurt": 59,
+            "ice cream": 207,
+            "butter": 717,
+            "olive oil": 884,
+            "peanut butter": 588,
+            "spinach": 23,
+            "lettuce": 15,
+            "cherry": 50,
+            "mango": 60,
+            "kiwi": 61,
+            "pear": 57,
+            "blueberry": 57,
+            "raspberry": 52,
+            "blackberry": 43,
+            "pear": 57,
+            "peach": 39,
+            "cabbage": 25,
+            "zucchini": 17,
+            "eggplant": 24,
+            "cauliflower": 25,
+            "sweet potato": 86,
+            "beet": 43,
+            "pumpkin": 26,
+            "corn": 96,
+            "shrimp": 99,
+            "lobster": 89,
+            "crab": 83,
+            "tuna": 144,
+            "oatmeal": 68,
+            "quinoa": 120,
+            "chickpeas": 164,
+            "lentils": 116,
+            "beans": 347,
+            "tofu": 76,
+            "miso": 198,
+            "soy milk": 54,
+            "green tea": 0,
+            "coffee": 2,
+            "cola": 40,
+            "juice": 45,
+            "beer": 43,
+            "wine": 85,
+            "whiskey": 250
+        };
+
+        function analyzeImage(base64Image) {
+            $.ajax({
+                url: `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    requests: [{
+                        image: { content: base64Image },
+                        features: [{ type: "LABEL_DETECTION", maxResults: 20 }]
+                    }]
+                }),
+                success: function (response) {
+                    const labels = response.responses[0].labelAnnotations;
+                    let foodDetected = false;
+                    let resultText = "食べ物が見つかりませんでした。";
+
+                    // 食べ物ラベルを検出
+                    labels.forEach(label => {
+                        console.log(label.description);
+                        const foodName = label.description.toLowerCase();
+
+                        // 食べ物のカロリー情報を取得
+                        if (foodCalories[foodName]) {
+                            foodDetected = true;
+                            const calories = foodCalories[foodName];
+                            resultText = `<li>${foodName}が検出されました！<br>カロリーは${calories} kcalです。</li>`;
+                        }
+                    });
+
+                    // 食べ物が検出された場合、結果を表示
+                    if (foodDetected) {
+                        $("#result").html(resultText).fadeIn();
+                    } else {
+                        $("#result").fadeOut(); // 食べ物が見つからなかった場合は非表示
+                    }
+                },
+                error: function (error) {
+                    console.error("APIエラー:", error);
+                    $("#result").text("解析に失敗しました。").fadeIn();
+                }
+            });
+        }
+
+        $("#analyzeButton").click(function () {
+            const file = $("#imageInput")[0].files[0];
+
+            if (!file) {
+                alert("画像を選択してください");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                const base64Image = reader.result.split(',')[1];
+                analyzeImage(base64Image);
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+
+</html>

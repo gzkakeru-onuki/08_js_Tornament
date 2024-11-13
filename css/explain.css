@@ -1,0 +1,152 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+    display: flex;
+    background-color: rgb(224, 228, 232);
+    border-radius: 50px;
+    margin-bottom: 10px;
+}
+
+.header-logo {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.header-logo a {
+    text-decoration: none;
+    color: black;
+    margin-left: 10px;
+}
+
+.header-item {
+    float: left;
+    list-style: none;    
+    padding-top: 10px;
+    padding-right: 6px;   
+}
+
+.header-item a {
+    text-decoration: none;
+    color: black;
+}
+
+
+.mainhead {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #333;
+}
+
+.subhead {
+    font-size: 12px;
+    margin-left: 10px;
+    color: steelblue;
+}
+
+
+.submits {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.character img {
+    width: 120px;
+    margin-bottom: 10px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.character img:hover {
+    animation: bounce 0.5s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.explain-item {
+    font-size: 15px;
+    border-left: 3px solid black;
+    border-right: 3px solid black;
+    padding: 10px 0;
+    color: #333;
+}
+
+.toggle-button {
+    padding: 10px 20px;
+    width: 150px;
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    background-color: skyblue;
+    color: whitesmoke;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.toggle-button:hover {
+    transform: translateY(-3px);
+    animation: rotation 2s ease-in 0s 1 alternate none running;
+    animation-fill-mode: forwards;   
+}
+
+.start-button {
+    padding: 10px 20px;
+    width: 150px;
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    background-color: skyblue;
+    color: whitesmoke;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.start-button:hover {
+    transform: translateY(-3px);
+    animation: rotation 2s ease-in 0s 1 alternate none running;
+    animation-fill-mode: forwards;
+}
+
+@keyframes rotation {
+    0% {
+        background-color: lightgreen;
+    }
+
+    50% {
+        background-color: burlywood;
+    }
+
+    100% {
+        background-color: orange;
+    }
+}

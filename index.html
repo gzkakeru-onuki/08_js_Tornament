@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCA_Mental Care Assistant</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+    <div class="container" style="display: none;">
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <h4>今日の気分を5点中何点か入力！</h4>
+        <div class="character fuwafuwa01">
+            <img src="images/baymax.jpg" alt="Friendly Assistant Character" id="character-image">
+        </div>
+        <div class="question">
+            <p>モードのレベル（５段階）</p>
+            <input id="mood-value" type="text" placeholder="1~5">
+            <p>エネルギーレベル（5段階）</p>
+            <input id="energy-value" type="text" placeholder="1~5">
+            <p>フォーカスレベル（5段階）</p>
+            <input id="focus-value" type="text" placeholder="1~5">
+            <p>睡眠レベル（5段階）</p>
+            <input id="sleep-value" type="text" placeholder="1~5">
+            <p>ストレスレベル（5段階）</p>
+            <input id="stress-value" type="text" placeholder="1~5">
+        </div>
+        <div class="submit">
+            <button id="submit-button">送信</button>
+        </div>
+
+        <div id="response""></div>
+        <div id="mood-response"></div>
+        <canvas id="moodChart" style="display: none;"></canvas>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0",
+            authDomain: "project-mca-53bf6.firebaseapp.com",
+            databaseURL: "https://project-mca-53bf6-default-rtdb.firebaseio.com",
+            projectId: "project-mca-53bf6",
+            storageBucket: "project-mca-53bf6.firebasestorage.app",
+            messagingSenderId: "746471305667",
+            appId: "1:746471305667:web:1043d1a07f1ec6116acd76"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth();
+
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // ユーザーがサインインしている場合
+                    const moodRef = ref(db, `users/${user.uid}/moodRecords`);
+
+                    // 送信ボタンがクリックされたときの処理
+                    $("#submit-button").on("click", function () {
+                        const energyInput = $("#energy-value").val();
+                        const focusInput = $("#focus-value").val();
+                        const moodInput = $("#mood-value").val();
+                        const stressInput = $("#stress-value").val();
+                        const sleepInput = $("#sleep-value").val();
+
+                        const energyValue = parseInt(energyInput);
+                        const focusValue = parseInt(focusInput);
+                        const moodValue = parseInt(moodInput);
+                        const stressValue = parseInt(stressInput);
+                        const sleepValue = parseInt(sleepInput);
+
+                        if (!energyInput || !focusInput || !moodInput || !stressInput || !sleepInput) {
+                            alert("すべてのレベルを入力してください。");
+                            return;
+                        }
+
+                        // 現在の日付
+                        const today = new Date();
+                        const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+
+                        // Firebaseにデータを追加
+                        push(moodRef, {
+                            energy: energyValue,
+                            focus: focusValue,
+                            mood: moodValue,
+                            stress: stressValue,
+                            sleep: sleepValue,
+                            timestamp: formattedDate
+                        }).then(() => {
+                            $("#response").text("今の気分レベルを記録しました！").fadeIn(1000).fadeOut(3000);
+                        }).catch((error) => {
+                            console.error("Error:", error);
+                        });
+
+                        // 最新のデータでレーダーチャートを更新
+                        get(moodRef).then((snapshot) => {
+                            let totalMood = 0;
+                            let totalEnergy = 0;
+                            let totalFocus = 0;
+                            let totalStress = 0;
+                            let totalSleep = 0;
+                            let count = 0;
+
+                            snapshot.forEach((childSnap) => {
+                                const mood = childSnap.val().mood;
+                                const energy = childSnap.val().energy;
+                                const focus = childSnap.val().focus;
+                                const stress = childSnap.val().stress;
+                                const sleep = childSnap.val().sleep;
+
+                                if (typeof mood === 'number' && typeof energy === 'number' && typeof focus === 'number' &&
+                                    typeof stress === 'number' && typeof sleep === 'number') {
+                                    totalMood += mood;
+                                    totalEnergy += energy;
+                                    totalFocus += focus;
+                                    totalStress += stress;
+                                    totalSleep += sleep;
+                                    count++;
+                                }
+                            });
+
+                            const averageMood = totalMood / count;
+                            const averageEnergy = totalEnergy / count;
+                            const averageFocus = totalFocus / count;
+                            const averageStress = totalStress / count;
+                            const averageSleep = totalSleep / count;
+
+                            // レーダーチャートを更新
+                            moodChart.data.datasets[0].data = [averageMood, averageEnergy, averageFocus, averageSleep, averageStress];
+                            moodChart.update();
+                            // ユーザーへのフィードバック
+                            let feedback = "あなたはとても元気ですね！";
+                            if (averageMood <= 2) {
+                                feedback = "少し休んでくださいね。";
+                            } else if (averageEnergy <= 2) {
+                                feedback = "休息が必要かもしれません。";
+                            } else if (averageStress >= 4) {
+                                feedback = "ストレスが高いのでリラックスしてください。";
+                            }
+
+                            $("#moodChart").fadeIn(1000);
+                            $("#mood-response").html(`<p>モード：${averageMood.toFixed(1)}</p> <p>エネルギー：${averageEnergy.toFixed(1)}</p><p>フォーカス：${averageFocus.toFixed(1)}</p> <p>ストレス：${averageStress.toFixed(1)}</p> <p>睡眠：${averageSleep.toFixed(1)}</p><p style="font-weight:bold; color:orange;">${feedback}</p>`).fadeIn(1000);
+                        });
+                    });
+                } else {
+                    // ユーザーがサインインしていない場合
+                    $("#response").text("ログインしてから話しましょう！").fadeIn(1000).fadeOut(3000).css("color", "red");
+                    $("#submit-button").prop("disabled", true);  // 送信ボタンを無効化
+                }
+
+                // Chart.jsでのチャートの実装
+                const moodChart = new Chart(document.getElementById("moodChart"), {
+                    type: "radar",
+                    data: {
+                        labels: ["Mood", "Energy", "Focus", "Sleep Quality", "Stress Level"], // 各軸のラベルを設定
+                        datasets: [{
+                            label: "Average Feel Level.", // データセットのラベル
+                            data: [0, 0, 0, 0, 0], // 初期値はゼロで設定
+                            backgroundColor: "rgba(75, 192, 192, 0.2)", // チャートの背景色
+                            borderColor: "rgba(75, 192, 192, 1)", // チャートの枠線色
+                            borderWidth: 2 // チャートの枠線の太さ
+                        }]
+                    },
+                    options: {
+                        responsive: true, // デバイスの画面サイズに合わせてチャートを調整するかどうか
+                        scales: {
+                            r: {
+                                angleLines: { // 各軸のライン
+                                    color: "rgba(0, 0, 0, 0.1)" // 軸の線の色を指定
+                                },
+                                suggestedMin: 0, // 最小値
+                                suggestedMax: 5, // 最大値
+                                ticks: {
+                                    stepSize: 1 // 目盛りの間隔を指定
+                                },
+                                grid: { // チャート全体のグリッド設定
+                                    color: "rgba(0, 0, 0, 0.1)" // グリッドの色
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント画面</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+
+    <!-- ログインフォーム -->
+    <div class="container" style="display: none;">
+
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <h1 class="mainhead">LOGIN(ꕹ)<span class="subhead">ログイン</span></h1>
+        <div class="character">
+            <img src="images/baymax2.png" alt="Friendly Assistant Character" id="character-image">
+        </div>
+
+        <div id="login-form">
+            <input type="email" id="email" placeholder="メールアドレスを入力"><br>
+            <input type="password" id="password" placeholder="パスワードを入力">
+            <div class="submits">
+                <button id="login-button">- ログイン -</button><br>
+            </div>
+            <div class="submits">
+                <button id="signup-button">- アカウントがない方 -</button>
+            </div>
+        </div>
+        <div id="user-info" style="display:none;">
+            <p class="login-message">COLLECT!<br>ようこそ、お待ちしてました!</p>
+        </div>
+        <div class="explain">
+            <h3>What is MCA?</h3>
+            <p class="explain-item">MCAとは（Mental Care Assistant）<br>
+                の略称で、セカイで最も優しさに溢れたそんなケアアシスタントAIです。
+                あなたもこの愛らしいAIでココロを癒やしましょう!
+            </p>
+
+            <button id="explain-button">詳細を見る</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js'
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0",
+            authDomain: "project-mca-53bf6.firebaseapp.com",
+            databaseURL: "https://project-mca-53bf6-default-rtdb.firebaseio.com",
+            projectId: "project-mca-53bf6",
+            storageBucket: "project-mca-53bf6.firebasestorage.app",
+            messagingSenderId: "746471305667",
+            appId: "1:746471305667:web:1043d1a07f1ec6116acd76"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(); // Firebase Authenticationを初期化
+
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+        });
+
+
+        // サインアップボタンの処理
+        $("#signup-button").on("click", function () {
+            location.href = "signup.html";
+        });
+
+        // 詳細ボタンの処理
+        $("#explain-button").on("click", function () {
+            location.href = "explain.html";
+        });
+
+        // ログインボタンの処理
+        $("#login-button").on("click", function () {
+            const email = $("#email").val();
+            const password = $("#password").val();
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    $("#user-info").fadeIn(1000);
+                    $("#login-form").fadeOut(1000, function () { // 1秒かけてフェードアウト
+                        const userId = userCredential.user.uid;
+                        localStorage.setItem("userId", userId);
+
+                        // フェードアウトが完全に終わった後にリダイレクト
+                        setTimeout(() => {
+                            location.href = "index.html";
+                        }, 1000); // 完全にフェードアウトした後すぐにリダイレクト
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        });
+
+        // ログアウトボタンの処理
+        $("#logout-button").on("click", function () {
+            signOut(auth)
+                .then(() => {
+                    $("#user-info").hide();
+                    $("#login-form").fadeIn(1000);
+                    const userId = userCredential.user.uid;
+                    localStorage.clear("userId");
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        });
+    </script>
+
+</body>
+
+</html>

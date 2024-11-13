@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/camera.css">
+    <title>怪我の画像解析</title>
+    <style>
+        #result {
+            color: red;
+            display: none;
+        }
+
+        #hospitals {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+    <div class="container" style="display: none;">
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <h3>怪我の画像をアップロードして解析</h3>
+        <div class="character fuwafuwa01">
+            <img src="images/baymax.jpg" alt="Friendly Assistant Character" id="character-image">
+        </div>
+
+        <label class="selectFileButton">ファイルを選択<input type="file" id="imageInput" accept="image/*"
+                style="display: none;"></label><br>
+        <button id="analyzeButton">画像解析</button>
+        <p id="result"></p>
+        <div id="hospitals">
+            <h2>近くの病院</h2>
+            <ul id="hospital-list" style="height: 300px; overflow: scroll;"></ul>
+            <button id="callAmbulanceButton">救急車を呼ぶ</button>
+        </div>
+    </div>
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+        })
+        const VISION_API_KEY = 'AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0'; // Google Cloud Vision APIキー
+
+        // 画像解析を実行
+        function analyzeImage(base64Image) {
+            $.ajax({
+                url: `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    requests: [{
+                        image: { content: base64Image },
+                        features: [{ type: "LABEL_DETECTION", maxResults: 20 }]
+                    }]
+                }),
+                success: function (response) {
+                    const labels = response.responses[0].labelAnnotations;
+                    let injuryDetected = false;
+                    let resultText = "";
+
+                    labels.forEach(label => {
+                        console.log(label.description);
+                        // 怪我や病気に関連するキーワードの配列
+                        const injuryKeywords = [
+                            "Scar", "Bandage", "Wound", "Bruise", "Pain", "Injury", "Bleeding", "Fracture",
+                            "Burn", "Sprain", "Cut", "Abrasion", "Swelling", "Infection", "Inflammation",
+                            "Sore", "Dislocation", "Contusion", "Blister", "Hemorrhage", "Numbness", "Cramp",
+                            "Fever", "Headache", "Stiffness", "Ache", "Laceration", "Tear", "Discomfort",
+                            "Strain", "Trauma"
+                        ];
+                        if (injuryKeywords.some(keyword => label.description.includes(keyword))) {
+                            injuryDetected = true;
+                            resultText = `<p style="font-weight:bold">怪我や痛みを検出しました！<br>適切な応急処置を行ってください。</p>`;
+                        }
+                    });
+
+                    if (injuryDetected) {
+                        $("#result").html(resultText).fadeIn();
+                        findNearbyHospitals(); // 病院を検索
+                    } else {
+                        $("#result").fadeOut();
+                        $("#hospitals").fadeOut();
+                    }
+                },
+                error: function (error) {
+                    console.error("APIエラー:", error);
+                    $("#result").text("解析に失敗しました。").fadeIn();
+                }
+            });
+        }
+
+        // 近くの病院を検索
+        function findNearbyHospitals() {
+            // 現在地を取得
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    console.log(lat, lng);
+
+                    // サーバーに病院情報のリクエストを送る
+                    $.ajax({
+                        url: `http://localhost:3000/getHospitals?lat=${lat}&lng=${lng}`,
+                        type: 'GET',
+                        success: function (response) {
+                            console.log(response);
+                            const hospitals = response.results;
+                            $("#hospital-list").empty();
+
+                            if (hospitals.length > 0) {
+                                hospitals.forEach(hospital => {
+                                    console.log(hospital);
+                                    $("#hospital-list").append(`<li>病院名：${hospital.name}<br>住所：<a href="https://www.google.co.jp/maps/place/${hospital.vicinity}" target="_blank">${hospital.vicinity}</li>`);
+                                });
+                                $("#hospitals").fadeIn();
+                            } else {
+                                $("#hospital-list").append("<li>近くの病院は見つかりませんでした。</li>");
+                                $("#hospitals").fadeIn();
+                            }
+                        },
+                        error: function (error) {
+                            console.error("病院情報の取得エラー:", error);
+                            $("#hospital-list").text("病院情報を取得できませんでした。");
+                            $("#hospitals").fadeIn();
+                        }
+                    });
+                });
+            } else {
+                alert("現在地を取得できません。");
+            }
+        }
+
+
+        $("#analyzeButton").click(function () {
+            const file = $("#imageInput")[0].files[0];
+
+            if (!file) {
+                alert("画像を選択してください");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                const base64Image = reader.result.split(',')[1];
+                analyzeImage(base64Image);
+            };
+
+            reader.readAsDataURL(file);
+        });
+        $('#callAmbulanceButton').on('click', function () {
+            if (confirm("本当に救急車を呼びますか？")) {
+                window.location.href = "tel:08066039686";
+            }
+        });
+    </script>
+</body>
+
+</html>

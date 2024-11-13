@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント画面</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="css/explain.css">
+</head>
+
+<body>
+    <!-- ログインフォーム -->
+    <div class="container" style="display: none;">
+
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <h1 class="mainhead">Specifics(ꕹ)<span class="subhead">詳細</span></h1>
+        <div class="character">
+            <img src="images/baymax2.png" alt="Friendly Assistant Character" id="character-image">
+        </div>
+        <div class="explain">
+            <h3>What is MCA?</h3>
+            <p class="explain-item">MCAとは（Mental Care Assistant）<br>
+                の略称で、セカイで最も優しさに溢れたそんなケアアシスタントAIです。
+                あなたもこの愛らしいAIでココロを癒やしましょう!
+            </p>
+            <div class="explain-list">
+                <h3>MCAでできること</h3>
+                <button class="start-button">MCAを始める</button>
+                <button class="toggle-button">詳細を表示</button>
+                <div class="details" style="display: none;">
+                    <h4>1.日々の心のストレスを可視化</h4>
+                    <p>1日のやる気やストレスレベルなどを入力すると、
+                        入力されたデータをもとにレーダーチャートを作成し、
+                        過去の入力履歴を遡り、あなたにケアすべき内容を提供します。
+                    </p>
+
+                    <h4>2.日々のタスクの管理</h4>
+                    <p>1日のタスクを入力すると、入力されたタスクと過去のストレスレベルを
+                        AIが管理し、「働きすぎ」や「健康」なのか「ストレスが溜まっている」かの情報を
+                        計算し、あなたに適切な対処法を提供いたします。（実装予定）
+                        また、通常のTodoリストとしても使用できます。
+                    </p>
+
+                    <h4>3.怪我の情報の解析</h4>
+                    <p>あなたの大事な人が怪我をした場合、カメラで撮影した画像を読み込ませることで、
+                        どんな怪我をしているのかをAIが検知します。適切な治療法及び、近くの半径5km圏内にある病院を
+                        自動的にサーチし表示します。
+                    </p>
+
+                    <h4>4.カロリー情報の解析</h4>
+                    <p>メンタルを保つのに、食事は大切です。あなたの食べるものをカメラで撮影し、読み込ませることで、
+                        どんな食べ物でカロリーはどのくらいなのかを検知し表示します。日々の食事があなたを作ります。
+                        健康的な食事を心がけましょう。
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+
+
+        <script type="module">
+            // Import the functions you need from the SDKs you need
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+            import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js'
+
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0",
+                authDomain: "project-mca-53bf6.firebaseapp.com",
+                databaseURL: "https://project-mca-53bf6-default-rtdb.firebaseio.com",
+                projectId: "project-mca-53bf6",
+                storageBucket: "project-mca-53bf6.firebasestorage.app",
+                messagingSenderId: "746471305667",
+                appId: "1:746471305667:web:1043d1a07f1ec6116acd76"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(); // Firebase Authenticationを初期化
+
+            $(document).ready(function () {
+                $(".container").fadeIn(2500);
+                $(".toggle-button").on("click", function () {
+                    $(this).next(".details").slideToggle();
+
+                    if ($(this).text() === "詳細を表示") {
+                        $(this).text("詳細を隠す");
+                    } else {
+                        $(this).text("詳細を表示");
+                    }
+                });
+            });
+
+            // サインアップボタンの処理
+            $(".start-button").on("click", function () {
+                location.href = "signup.html";
+            });
+
+            // ログインボタンの処理
+            $("#login-button").on("click", function () {
+                const email = $("#email").val();
+                const password = $("#password").val();
+
+                signInWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        $("#user-info").fadeIn(1000);
+                        $("#login-form").fadeOut(1000, function () { // 1秒かけてフェードアウト
+                            const userId = userCredential.user.uid;
+                            localStorage.setItem("userId", userId);
+
+                            // フェードアウトが完全に終わった後にリダイレクト
+                            setTimeout(() => {
+                                location.href = "index.html";
+                            }, 1000); // 完全にフェードアウトした後すぐにリダイレクト
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                    });
+            });
+
+            // ログアウトボタンの処理
+            $("#logout-button").on("click", function () {
+                signOut(auth)
+                    .then(() => {
+                        $("#user-info").hide();
+                        $("#login-form").fadeIn(1000);
+                        const userId = userCredential.user.uid;
+                        localStorage.clear("userId");
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                    });
+            });
+        </script>
+
+</body>
+
+</html>

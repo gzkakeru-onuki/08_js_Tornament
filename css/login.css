@@ -1,0 +1,329 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+    display: flex;
+    background-color: rgb(224, 228, 232);
+    border-radius: 50px;
+    margin-bottom: 10px;
+}
+
+.header-logo {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.header-logo a {
+    text-decoration: none;
+    color: black;
+    margin-left: 10px;
+}
+
+.header-item {
+    float: left;
+    list-style: none;    
+    padding-top: 10px;
+    padding-right: 6px;   
+}
+
+.header-item a {
+    text-decoration: none;
+    color: black;
+}
+
+.mainhead {
+    font-size: 30px;
+}
+
+.subhead {
+    font-size: 10px;
+    margin-left: 10px;
+    color: steelblue;
+}
+
+input#email {
+    height: 30px;
+    width: 200px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background: whitesmoke;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+input#email:hover {
+    transform: translateY(-3px);
+    background-color: aliceblue;
+    transform: scale(1.1);
+}
+
+input#password {
+    width: 200px;
+    height: 30px;
+    border-radius: 5px;
+    background: whitesmoke;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+input#password:hover {
+    transform: translateY(-3px);
+    background-color: aliceblue;
+    transform: scale(1.1);
+}
+
+.submits {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.character img {
+    width: 120px;
+    margin-bottom: 10px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.character img:hover {
+    animation: work 5s  ease-in-out infinite;
+}
+
+@keyframes work {
+    0% {
+        transform: translateX(0px);
+    }
+
+    10% {
+        transform: translateX(-3px);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    30% {
+        transform: translateX(-9px);
+    }
+
+    40% {
+        transform: translateX(-12px);
+    }
+
+    50% {
+        transform: translateX(-15px);
+    }
+
+    60% {
+        transform: translateX(-18px);
+    }
+
+    70% {
+        transform: translateX(-21px);
+    }
+
+    80% {
+        transform: translateX(-24px);
+    }
+
+    90% {
+        transform: translateX(-27px);
+    }
+
+    100% {
+        transform: translateX(-30px);
+    }
+}
+
+#login-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    width: 200px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    border: none;
+    border-radius: 5px;
+    background-color: skyblue;
+    color: whitesmoke;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#login-button:hover {
+    transform: translateY(-3px);
+    animation: rotation 2s ease-in 0s 1 alternate none running;
+    animation-fill-mode: forwards;
+}
+
+#signup-button {
+    padding: 10px 20px;
+    width: 200px;
+    border: none;
+    border-radius: 5px;
+    background-color: skyblue;
+    color: whitesmoke;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#signup-button:hover {
+    transform: translateY(-3px);
+    animation: rotation 2s ease-in 0s 1 alternate none running;
+    animation-fill-mode: forwards;
+}
+
+
+@keyframes rotation {
+    0% {
+        background-color: lightgreen;
+    }
+
+    50% {
+        background-color: burlywood;
+    }
+
+    100% {
+        background-color: orange;
+    }
+}
+
+.login-message {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+
+.explain-item {
+    font-size: 15px;
+    border-left: 3px solid black;
+    border-right: 3px solid black;
+}
+
+#explain-button {
+    padding: 10px 20px;
+    width: 200px;
+    border: none;
+    border-radius: 5px;
+    background-color: skyblue;
+    color: whitesmoke;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+
+#explain-button:hover {
+    transform: translateY(-3px);
+    animation: rotation 2s ease-in 0s 1 alternate none running;
+    animation-fill-mode: forwards;
+}
+
+
+.wrapper{
+    width:200px;
+    height:60px;
+    position: absolute;
+    left:50%;
+    top:50%;
+    transform: translate(-50%, -50%);
+}
+.circle{
+    width:20px;
+    height:20px;
+    position: absolute;
+    border-radius: 50%;
+    background-color: #fff;
+    left:15%;
+    transform-origin: 50%;
+    animation: circle .5s alternate infinite ease;
+}
+
+@keyframes circle{
+    0%{
+        top:60px;
+        height:5px;
+        border-radius: 50px 50px 25px 25px;
+        transform: scaleX(1.7);
+    }
+    40%{
+        height:20px;
+        border-radius: 50%;
+        transform: scaleX(1);
+    }
+    100%{
+        top:0%;
+    }
+}
+.circle:nth-child(2){
+    left:45%;
+    animation-delay: .2s;
+}
+.circle:nth-child(3){
+    left:auto;
+    right:15%;
+    animation-delay: .3s;
+}
+.shadow{
+    width:20px;
+    height:4px;
+    border-radius: 50%;
+    background-color: rgba(0,0,0,.5);
+    position: absolute;
+    top:62px;
+    transform-origin: 50%;
+    z-index: -1;
+    left:15%;
+    filter: blur(1px);
+    animation: shadow .5s alternate infinite ease;
+}
+
+@keyframes shadow{
+    0%{
+        transform: scaleX(1.5);
+    }
+    40%{
+        transform: scaleX(1);
+        opacity: .7;
+    }
+    100%{
+        transform: scaleX(.2);
+        opacity: .4;
+    }
+}
+.shadow:nth-child(4){
+    left: 45%;
+    animation-delay: .2s
+}
+.shadow:nth-child(5){
+    left:auto;
+    right:15%;
+    animation-delay: .3s;
+}
+.wrapper span{
+    position: absolute;
+    top:75px;
+    font-family: 'Lato';
+    font-size: 20px;
+    letter-spacing: 12px;
+    color: #fff;
+    left:15%;
+}

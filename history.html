@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCA_Mental Care Assistant</title>
+    <link rel="stylesheet" href="css/history.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <div class="shadow"></div>
+        <span>Loading</span>
+    </div>
+    <div class="container" style="display: none;">
+        <header class="header">
+            <div class="header-logo">
+                <h1><a href="index.html">MCA</a></h1>
+            </div>
+            <div class="header-list">
+                <ul>
+                    <li class="header-item"><a href="history.html">History</a></li>
+                    <li class="header-item"><a href="task.html">Task</a></li>
+                    <li class="header-item"><a href="camera.html">Scan</a></li>
+                    <li class="header-item"><a href="foods.html">Food</a></li>
+                </ul>
+            </div>
+        </header>
+        <h3>過去履歴チャート</h3>
+        <div class="character">
+            <img src="images/baymax.jpg" id="character-image">
+        </div>
+        
+        <div id="filter-options">
+            <label for="time-filter" style="font-weight: bold;">表示期間を選択してください</label>
+            <select id="time-filter">
+                <option value="7">過去1週間</option>
+                <option value="30">過去1ヶ月</option>
+                <option value="all">全期間</option>
+            </select>
+        </div>
+        <!-- データ表示用のエリア -->
+        <div id="data-list"></div>
+        <!-- グラフ表示エリア -->
+        <canvas id="mood-chart" width="400" height="200"></canvas>
+
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB3VMT8vLf3K8i4h5oWjoszj2ff_DzaN0",
+            authDomain: "project-mca-53bf6.firebaseapp.com",
+            databaseURL: "https://project-mca-53bf6-default-rtdb.firebaseio.com",
+            projectId: "project-mca-53bf6",
+            storageBucket: "project-mca-53bf6.firebasestorage.app",
+            messagingSenderId: "746471305667",
+            appId: "1:746471305667:web:1043d1a07f1ec6116acd76"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth();
+        let myChart;
+
+        $(document).ready(function () {
+            $(".wrapper").fadeIn(2000).fadeOut();
+            $(".container").fadeIn(2500);
+            // グラフの初期化
+            const ctx = document.getElementById('mood-chart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Mood', 'Energy', 'Focus', 'Sleep', 'Stress'],
+                    datasets: [{
+                        label: 'Average Stats',
+                        data: [0, 0, 0, 0, 0], // 初期データ
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const moodRef = ref(db, `users/${user.uid}/moodRecords`);
+                    $("#time-filter").on("change", function () {
+                        const period = $(this).val();
+                        filterAndDisplayData(moodRef, period);
+                    });
+
+                    filterAndDisplayData(moodRef, "all");
+                } else {
+                    $("#response").text("ログインしてから話しましょう！").fadeIn(1000).fadeOut(3000).css("color", "red");
+                }
+            });
+        });
+
+        // 期間に基づくデータフィルタリングと平均計算
+        function filterAndDisplayData(moodRef, period) {
+            onValue(moodRef, (snapshot) => {
+                const data = [];
+                const now = new Date();
+                let moodSum = 0, energySum = 0, focusSum = 0, sleepSum = 0, stressSum = 0;
+                let count = 0;
+
+                snapshot.forEach((childSnap) => {
+                    const record = childSnap.val();
+                    const recordDate = new Date(record.timestamp);
+                    const diffDays = Math.floor((now - recordDate) / (1000 * 60 * 60 * 24));
+
+                    // 期間フィルター処理
+                    if ((period === '7' && diffDays <= 7) ||
+                        (period === '30' && diffDays <= 30) ||
+                        period === 'all') {
+                        data.push(record);
+
+                        // 合計値の計算
+                        moodSum += record.mood;
+                        energySum += record.energy;
+                        focusSum += record.focus;
+                        sleepSum += record.sleep;
+                        stressSum += record.stress;
+                        count++;
+                    }
+                });
+
+                // 平均値の計算 三項演算子
+                const averageMood = (count > 0) ? moodSum / count : 0;
+                const averageEnergy = (count > 0) ? energySum / count : 0;
+                const averageFocus = (count > 0) ? focusSum / count : 0;
+                const averageSleep = (count > 0) ? sleepSum / count : 0;
+                const averageStress = (count > 0) ? stressSum / count : 0;
+
+                // Chart.js に表示するために平均値を配列にまとめる
+                updateChart([averageMood, averageEnergy, averageFocus, averageSleep, averageStress]);
+
+                // ソートとデータの表示
+                data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                displayData(data);
+            });
+        }
+
+        // Chart.js の更新関数
+        function updateChart(averages) {
+            myChart.data.datasets[0].data = averages;
+            myChart.update();
+        }
+
+    </script>
+
+</body>
+
+</html>
